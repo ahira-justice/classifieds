@@ -1,0 +1,47 @@
+image: python:3.8.1
+
+stages:
+  - test
+  - staging
+  - deploy
+
+codequality:
+  stage: test
+  before_script:
+    - "pip install -r requirements.txt"
+  script:
+    - "flake8"
+
+test:
+  stage: test
+  before_script:
+    - "pip install -r requirements.txt"
+  script:
+    - "python manage.py test"
+
+staging:
+  stage: staging
+  script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+    - dpl --provider=heroku --app=$APP_NAME --api-key=$HEROKU_STAGING_API_KEY
+  only:
+    - master
+
+production:
+  when: manual
+  stage: deploy
+  script:
+    - apt update -qy
+    - apt install -y snapd
+    - snap install doctl
+    - doctl auth init --access-token $DIGITAL_OCEAN_ACCESS_TOKEN
+    - doctl compute ssh $USER@$DROPLET_NAME --ssh-command "cd $BASE_DIR && git clone $CI_REPOSITORY_URL"
+    - doctl compute ssh $USER@$DROPLET_NAME --ssh-command "cd $BASE_DIR/$CI_PROJECT_NAME && git pull $REMOTE master"
+    - doctl compute ssh $USER@$DROPLET_NAME --ssh-command "source $VIRTUALENV_DIR/bin/activate && pip install -r requirements.txt"
+    - doctl compute ssh $USER@$DROPLET_NAME --ssh-command "cd $BASE_DIR/$CI_PROJECT_NAME && python manage.py migrate && python manage.py collectstatic"
+    - doctl compute ssh $USER@$DROPLET_NAME --ssh-command "echo $PROD_SERVER_SUDO_PASS | sudo --stdin systemctl restart gunicorn"
+    - doctl compute ssh $USER@$DROPLET_NAME --ssh-command "echo $PROD_SERVER_SUDO_PASS | sudo --stdin systemctl restart nginx"
+  only:
+    - master
