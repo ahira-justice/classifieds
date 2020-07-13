@@ -42,3 +42,22 @@ class UserModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+
+class ProfileModelTests(TestCase):
+    """Test class for the Profile model"""
+
+    def test_profile_str(self):
+        """Test the profile string representation"""
+        user = get_user_model().objects.create_user(
+            'test@c2c.com',
+            'testpassword'
+        )
+        profile = models.Profile.objects.create(
+            user=user,
+            first_name='Test',
+            last_name='User',
+            state_of_residence='LA'
+        )
+
+        self.assertEqual(str(profile), profile.user.email)
