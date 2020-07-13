@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from uuid import uuid4 as uid
 
 from core.managers import UserManager
+from utils.states import STATE_CHOICES
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -16,3 +17,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class Profile(models.Model):
+    """User profile model to extend user"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    state_of_residence = models.CharField(max_length=2, choices=STATE_CHOICES)
+
+    def __str__(self):
+        return self.user.email
