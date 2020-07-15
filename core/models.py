@@ -38,6 +38,8 @@ class Item(models.Model):
     price = models.IntegerField()
     description = models.TextField()
     url = models.CharField(max_length=255)
+    created_at = models.DateField(auto_now_add=True)
+    is_sold = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
