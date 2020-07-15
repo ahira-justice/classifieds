@@ -28,3 +28,16 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.email
+
+
+class Item(models.Model):
+    """Model for representing classified item"""
+    id = models.UUIDField(primary_key=True, default=uid, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    price = models.IntegerField()
+    description = models.TextField()
+    url = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
