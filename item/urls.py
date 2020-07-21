@@ -8,4 +8,5 @@ app_name = 'item'
 urlpatterns = [
     path('', views.Items.as_view(), name='collection'),
     path('<uuid:pk>/', views.ItemDetail.as_view(), name='resource'),
+    path('interest/', views.ShowInterest.as_view(), name='interest'),
 ]
