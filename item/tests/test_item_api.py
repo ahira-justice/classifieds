@@ -7,11 +7,12 @@ from rest_framework import status
 
 from uuid import uuid4 as uid
 
-from core.models import Item
+from core.models import Buyer, Item
 from item.serializers import ItemSerializer
 
 
 ITEMS_URL = reverse('item:collection')
+INTEREST_URL = reverse('item:interest')
 
 
 class PublicItemApiTests(TestCase):
@@ -23,7 +24,7 @@ class PublicItemApiTests(TestCase):
 
     def test_retrieve_item_list_buyer(self):
         """Test retrieving a list of items by a buyer is successful"""
-        user = get_user_model().objects.create_user('test1@c2c.com', 'testpassword')
+        user = get_user_model().objects.create_user('test@c2c.com', 'testpassword')
         Item.objects.create(
             user=user,
             name='Test Item1',
@@ -53,7 +54,7 @@ class PublicItemApiTests(TestCase):
 
     def test_retrieve_item_buyer(self):
         """Test retrieving an item by a buyer is successful"""
-        user = get_user_model().objects.create_user('test1@c2c.com', 'testpassword')
+        user = get_user_model().objects.create_user('test@c2c.com', 'testpassword')
         item = Item.objects.create(
             user=user,
             name='Test Item',
@@ -68,6 +69,46 @@ class PublicItemApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_show_interest_valid_item_exists(self):
+        """Test buyer is able to show interest in a seller's item"""
+        user = get_user_model().objects.create_user('test@c2c.com', 'testpassword')
+        item = Item.objects.create(
+            user=user,
+            name='Test Item',
+            price=12,
+            description='Item description',
+            url='c2c.com/static/item.jpg'
+        )
+        payload = {
+            'id': item.id,
+            'name': 'Test Buyer',
+            'email': 'test@c2c.com',
+            'location': 'Lagos'
+        }
+
+        res = self.client.post(INTEREST_URL, payload)
+
+        buyer = Buyer.objects.filter(name=payload['name'], email=payload['email'])
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(buyer.exists())
+
+    def test_show_interest_valid_item_doesnotexist(self):
+        payload = {
+            'id': self.resource_id,
+            'name': 'Test Buyer',
+            'email': 'test@c2c.com',
+            'location': 'Lagos'
+        }
+
+        res = self.client.post(INTEREST_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_show_interest_invalid(self):
+        res = self.client.post(INTEREST_URL, {})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_login_required_to_update_item(self):
         """Test that login is required for updating an item"""
