@@ -1,6 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -18,8 +19,8 @@ class Items(generics.ListCreateAPIView):
     def get_queryset(self):
         if self.request.user.is_authenticated:
             return Item.objects.filter(user=self.request.user)
-
-        return Item.objects.all().order_by('-created_at')
+        else:
+            return Item.objects.filter(is_sold=False).order_by('-created_at')
 
     def get_permissions(self):
         if self.request.method in ['POST']:
@@ -39,7 +40,7 @@ class ItemDetail(generics.RetrieveUpdateDestroyAPIView):
         if self.request.user.is_authenticated:
             return Item.objects.filter(user=self.request.user)
         else:
-            return Item.objects.all()
+            return Item.objects.filter(is_sold=False)
 
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
@@ -82,5 +83,36 @@ class ShowInterest(APIView):
             message['email'] = 'Please provide a value for email'
         if location is None:
             message['location'] = 'Please provide a value for location'
+
+        return message
+
+
+class MarkAsSold(APIView):
+    def post(self, request):
+        if not self.request.user.is_authenticated:
+            message = {'detail': ErrorDetail(string='Authentication credentials were not provided.', code='not_authenticated')}
+            return Response(message, status=status.HTTP_401_UNAUTHORIZED)
+
+        id = request.data.get('id', None)
+
+        message = self.validate(id)
+        if message:
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            item = Item.objects.get(id=id)
+            item.is_sold = True
+            item.save()
+            data = ItemSerializer(item).data
+
+            return Response(data, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            message = {'id': 'Item with provided id does not exist'}
+            return Response(message, status=status.HTTP_404_NOT_FOUND)
+
+    def validate(self, id):
+        message = {}
+        if id is None:
+            message['id'] = 'Please provide a value for id'
 
         return message
