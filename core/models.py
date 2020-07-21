@@ -30,6 +30,16 @@ class Profile(models.Model):
         return self.user.email
 
 
+class Buyer(models.Model):
+    id = models.UUIDField(primary_key=True, default=uid, editable=False)
+    name = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+    location = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
 class Item(models.Model):
     """Model for representing classified item"""
     id = models.UUIDField(primary_key=True, default=uid, editable=False)
@@ -40,6 +50,7 @@ class Item(models.Model):
     url = models.CharField(max_length=255)
     created_at = models.DateField(auto_now_add=True)
     is_sold = models.BooleanField(default=False)
+    buyers = models.ManyToManyField(Buyer, blank=True)
 
     def __str__(self):
         return self.name
