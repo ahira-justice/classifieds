@@ -13,6 +13,7 @@ from item.serializers import ItemSerializer
 
 ITEMS_URL = reverse('item:collection')
 INTEREST_URL = reverse('item:interest')
+MARK_AS_SOLD_URL = reverse('item:marksold')
 
 
 class PublicItemApiTests(TestCase):
@@ -70,6 +71,18 @@ class PublicItemApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
+    def test_login_required_to_update_item(self):
+        """Test that login is required for updating an item"""
+        RESOURCE_URL = reverse('item:resource', args=[self.resource_id])
+        res = self.client.put(RESOURCE_URL, {})
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_login_required_to_delete_item(self):
+        """Test that login is required to delete an item"""
+        RESOURCE_URL = reverse('item:resource', args=[self.resource_id])
+        res = self.client.delete(RESOURCE_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_show_interest_valid_item_exists(self):
         """Test buyer is able to show interest in a seller's item"""
         user = get_user_model().objects.create_user('test@c2c.com', 'testpassword')
@@ -94,7 +107,7 @@ class PublicItemApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertTrue(buyer.exists())
 
-    def test_show_interest_valid_item_doesnotexist(self):
+    def test_show_interest_valid_item_does_not_exist(self):
         payload = {
             'id': self.resource_id,
             'name': 'Test Buyer',
@@ -110,16 +123,8 @@ class PublicItemApiTests(TestCase):
         res = self.client.post(INTEREST_URL, {})
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_login_required_to_update_item(self):
-        """Test that login is required for updating an item"""
-        RESOURCE_URL = reverse('item:resource', args=[self.resource_id])
-        res = self.client.put(RESOURCE_URL, {})
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_login_required_to_delete_item(self):
-        """Test that login is required to delete an item"""
-        RESOURCE_URL = reverse('item:resource', args=[self.resource_id])
-        res = self.client.delete(RESOURCE_URL)
+    def test_login_required_to_mark_as_sold(self):
+        res = self.client.post(MARK_AS_SOLD_URL, {})
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
@@ -243,7 +248,7 @@ class PrivateItemApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_delete_item_staffuser(self):
+    def test_delete_item_seller(self):
         """Test deleting an item by a seller passes"""
         item = Item.objects.create(
             user=self.user,
@@ -257,3 +262,36 @@ class PrivateItemApiTests(TestCase):
         res = self.client.delete(RESOURCE_URL)
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_mark_as_sold_valid_item_exists(self):
+        user = get_user_model().objects.create_user('test1@c2c.com', 'testpassword')
+        item = Item.objects.create(
+            user=user,
+            name='Test Item',
+            price=12,
+            description='Item description',
+            url='c2c.com/static/item.jpg'
+        )
+        payload = {
+            'id': item.id
+        }
+
+        res = self.client.post(MARK_AS_SOLD_URL, payload)
+
+        item.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(item.is_sold)
+
+    def test_mark_as_sold_valid_item_does_not_exist(self):
+        payload = {
+            'id': uid()
+        }
+
+        res = self.client.post(MARK_AS_SOLD_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_mark_as_sold_invalid(self):
+        res = self.client.post(MARK_AS_SOLD_URL, {})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
