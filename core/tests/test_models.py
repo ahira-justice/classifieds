@@ -61,10 +61,10 @@ class ProfileModelTests(TestCase):
 
 
 class ItemModelTests(TestCase):
-    """Test class for the Profile model"""
+    """Test class for the Item model"""
 
     def test_item_str(self):
-        """Test the profile string representation"""
+        """Test the item string representation"""
         user = get_user_model().objects.create_user('test@c2c.com', 'testpassword')
         item = models.Item.objects.create(
             user=user,
@@ -75,3 +75,17 @@ class ItemModelTests(TestCase):
         )
 
         self.assertEqual(str(item), item.name)
+
+
+class BuyerModelTests(TestCase):
+    """Test class for the Buyer model"""
+
+    def test_buyer_str(self):
+        """Test the buyer string representation"""
+        buyer = models.Buyer.objects.create(
+            name='Test Buyer',
+            email='test@c2c.com',
+            location='Lagos'
+        )
+
+        self.assertEqual(str(buyer), buyer.name)
