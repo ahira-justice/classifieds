@@ -193,7 +193,7 @@ class PrivateItemApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_retrieve_item_seller(self):
-        """Test retrieving an item by a buyer is successful"""
+        """Test retrieving an item by a seller is successful"""
         item = Item.objects.create(
             user=self.user,
             name='Test Item',
