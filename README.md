@@ -1,10 +1,10 @@
-# c2c-api
+# classifieds
 
-c2c-api is a basic classifieds API for seller buyer interaction
+classifieds is a basic classifieds API for seller buyer interaction
 
 ## Overview
 
-c2c-api handles user authentication and permissions, a profile API, and a sellers items API.
+classifieds handles user authentication and permissions, a profile API, and a sellers items API.
 
 ## Authentication
 
@@ -37,4 +37,4 @@ There are currently no limits on the number of requests any user can send.
 
 ## Documentation
 
-The full documentation of c2c-api is published [here](https://documenter.getpostman.com/view/6516182/T1DpDJ7Z)
+The full documentation of classifieds is published [here](https://documenter.getpostman.com/view/6516182/T1DpDJ7Z)
