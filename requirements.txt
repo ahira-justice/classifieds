@@ -1,7 +1,7 @@
 asgiref==3.2.10
 autopep8==1.5.3
 dj-database-url==0.5.0
-Django==3.1.14
+Django==3.2.24
 django-heroku==0.3.1
 djangorestframework==3.11.2
 flake8==3.8.3
